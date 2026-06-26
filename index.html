@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#00FFFF" />
+    <meta name="theme-color" content="#00e5ff" />
     <meta name="description" content="Survive 30 days as a high-risk ecommerce merchant. Drug Wars meets processor shutdowns, chargebacks, and payment resilience." />
     <title>High Risk Wars</title>
     <link rel="manifest" href="manifest.json" />
@@ -12,9 +12,12 @@
     <link rel="apple-touch-icon" href="icon-180.png" sizes="180x180" />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body data-bg="war-room">
-    <div id="bg-layer" aria-hidden="true"></div>
+  <body>
+    <div class="background-layer" id="background-layer" aria-hidden="true"></div>
+    <div class="background-overlay" id="background-overlay" aria-hidden="true"></div>
     <canvas id="particle-canvas"></canvas>
+    <div id="scene-debug" class="scene-debug" aria-hidden="true">Scene: commerce-district</div>
+
     <div id="app">
       <header id="header">
         <img src="highriskwars_logo.png" alt="" class="header-logo" width="36" height="36" />
@@ -75,7 +78,7 @@
     </div>
 
     <div id="modal-overlay" class="overlay modal-overlay">
-      <div class="overlay-panel modal-panel" id="modal">
+      <div class="overlay-panel modal-panel tone-normal" id="modal">
         <h3 id="modal-title">Event</h3>
         <p id="modal-description"></p>
         <div class="choices" id="modal-choices"></div>

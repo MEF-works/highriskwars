@@ -11,6 +11,15 @@
   const INVENTORY_UNIT_VALUE = 80;
   const SOVEREIGN_STACK_URL = 'https://sovereignstack.pro';
 
+  const SCENES = {
+    'command-center': '/assets/backgrounds/bg-command-center.png',
+    'commerce-district': '/assets/backgrounds/bg-commerce-district.png',
+    'payment-failure': '/assets/backgrounds/bg-payment-failure.png',
+    'victory-penthouse': '/assets/backgrounds/bg-victory-penthouse.png'
+  };
+
+  let currentScene = 'commerce-district';
+
   const PRODUCTS = {
     sovpay: {
       id: 'sovpay',
@@ -245,34 +254,66 @@
     pendingPromos.push(productId);
   }
 
-  function setBackground(mode) {
-    document.body.setAttribute('data-bg', mode);
+  function preloadBackgrounds() {
+    Object.entries(SCENES).forEach(([id, url]) => {
+      const img = new Image();
+      img.onload = () => console.log('[Scene] preloaded:', id, url);
+      img.onerror = () => console.error('[Scene] failed to load:', id, url);
+      img.src = url;
+    });
+  }
+
+  function setScene(sceneId) {
+    const url = SCENES[sceneId];
+    if (!url) {
+      console.error('[Scene] unknown scene:', sceneId);
+      return;
+    }
+    currentScene = sceneId;
+    const layer = document.getElementById('background-layer');
+    if (layer) layer.style.backgroundImage = `url('${url}')`;
+    const debug = document.getElementById('scene-debug');
+    if (debug) debug.textContent = `Scene: ${sceneId}`;
+    document.body.classList.remove('scene-failure', 'scene-victory');
+    if (sceneId === 'payment-failure') document.body.classList.add('scene-failure');
+    if (sceneId === 'victory-penthouse') document.body.classList.add('scene-victory');
+    console.log('[Scene] switched to:', sceneId, url);
   }
 
   function updateBackgroundMood() {
+    if (!gameState?.started) {
+      setScene('commerce-district');
+      return;
+    }
     if (gameState.flashBg && Date.now() < gameState.flashBgUntil) {
-      setBackground(gameState.flashBg);
+      setScene(gameState.flashBg);
       return;
     }
     if (gameState.gameOver) {
-      setBackground(gameState.won ? 'millionaire' : 'system-failure');
+      setScene(gameState.won ? 'victory-penthouse' : 'payment-failure');
       return;
     }
-    if (gameState.risk >= 75 || gameState.shutdownDays > 0 || gameState.storeFrozen) {
-      setBackground('system-failure');
+    if (
+      gameState.risk >= 70 ||
+      gameState.shutdownDays > 0 ||
+      gameState.storeFrozen ||
+      !hasAnyPaymentPath()
+    ) {
+      setScene('payment-failure');
       return;
     }
-    if (gameState.market === 'Hot' || gameState.cash > gameState.startingNetWorth * 1.5) {
-      setBackground('futuristic');
+    if (gameState.market === 'Hot' || gameState.cash > gameState.startingNetWorth * 1.4) {
+      setScene('commerce-district');
       return;
     }
-    setBackground('war-room');
+    setScene('command-center');
   }
 
-  function flashBackground(mode, ms = 2500) {
-    gameState.flashBg = mode;
+  function flashBackground(sceneId, ms = 2500) {
+    if (!gameState) return;
+    gameState.flashBg = sceneId;
     gameState.flashBgUntil = Date.now() + ms;
-    updateBackgroundMood();
+    setScene(sceneId);
     setTimeout(updateBackgroundMood, ms + 50);
   }
 
@@ -477,7 +518,7 @@
           if (p.id === 'fallbackStorefront') addLog('Fallback storefront deployed.', 'good');
           if (p.id === 'railSetup') addLog('High-risk rail setup applied.', 'good');
           gameState.actionsLeft = Math.max(0, gameState.actionsLeft - 1);
-          flashBackground('millionaire');
+          flashBackground('command-center');
           saveGame();
           renderAll();
         }
@@ -601,8 +642,8 @@
     gameState.totalRevenue += collected;
     gameState.reputation = clamp(gameState.reputation + (collected > 3000 ? 1 : 0), 0, 100);
 
-    if (collected > 5000) flashBackground('millionaire');
-    else if (gameState.market === 'Hot') flashBackground('futuristic');
+    if (collected > 5000) flashBackground('commerce-district');
+    else if (gameState.market === 'Hot') flashBackground('commerce-district');
 
     addLog(
       `Day ${gameState.day}: Sold ${units} units (${gameState.market} market) for $${fmt(collected)}.`,
@@ -667,7 +708,7 @@
         addLog('AltPay backup rail engaging...', 'warn');
       }
     }
-    setBackground('system-failure');
+    setScene('payment-failure');
   }
 
   function maybeTriggerEvent() {
@@ -712,7 +753,8 @@
               }
             },
             { label: 'Accept fate', action: () => triggerProcessorShutdown() }
-          ]
+          ],
+          'danger'
         );
       }
     },
@@ -754,7 +796,8 @@
                 addLog(`Chargeback storm cost $${fmt(dmg)}.`, 'bad');
               }
             }
-          ]
+          ],
+          'danger'
         );
       }
     },
@@ -788,7 +831,8 @@
                 addLog('Stalling made the bank suspicious.', 'warn');
               }
             }
-          ]
+          ],
+          'warning'
         );
       }
     },
@@ -803,7 +847,8 @@
         showModal(
           'Reserve Hold',
           `Processor grabbed $${fmt(hold)} in rolling reserves. Your cash flow just got a personality test.`,
-          [{ label: 'Grind through it', action: () => addLog('Reserve hold active.', 'warn') }]
+          [{ label: 'Grind through it', action: () => addLog('Reserve hold active.', 'warn') }],
+          'warning'
         );
       }
     },
@@ -822,7 +867,8 @@
               }
             },
             { label: 'Wait it out', action: () => addLog('Demand dropped after ad ban.', 'bad') }
-          ]
+          ],
+          'warning'
         );
       }
     },
@@ -847,7 +893,8 @@
         showModal(
           'Fraud Wave',
           'Fraudsters discovered your checkout. They are not buying — they are stress-testing your sanity.',
-          [{ label: 'Tighten checks ($2k)', action: () => spend(2000) && (gameState.risk -= 8) }]
+          [{ label: 'Tighten checks ($2k)', action: () => spend(2000) && (gameState.risk -= 8) }],
+          'danger'
         );
       }
     },
@@ -862,7 +909,8 @@
           [
             { label: 'Ramp inventory ($6k)', action: () => spend(6000) && (gameState.inventory += 40) },
             { label: 'Ride the wave', action: () => addLog('Riding viral demand — risk climbing.', 'warn') }
-          ]
+          ],
+          'warning'
         );
       }
     },
@@ -874,7 +922,8 @@
         showModal(
           'Influencer Mention',
           'An influencer shouted you out. Their audience is hungry and mildly irresponsible with credit cards.',
-          [{ label: 'Capitalize', action: () => addLog('Reputation and demand boosted.', 'good') }]
+          [{ label: 'Capitalize', action: () => addLog('Reputation and demand boosted.', 'good') }],
+          'good'
         );
       }
     },
@@ -890,7 +939,8 @@
               action: () => spend(4000) && (gameState.compliance += 12) && (gameState.risk -= 6)
             },
             { label: 'Ignore', action: () => (gameState.risk += 12) }
-          ]
+          ],
+          'warning'
         );
       }
     },
@@ -903,7 +953,8 @@
         showModal(
           'Refund Wave',
           'Customers want refunds. Apparently "high risk" includes buyer remorse at scale.',
-          [{ label: 'Improve policy ($3k)', action: () => spend(3000) && (gameState.chargebackRate -= 3) }]
+          [{ label: 'Improve policy ($3k)', action: () => spend(3000) && (gameState.chargebackRate -= 3) }],
+          'warning'
         );
       }
     },
@@ -926,7 +977,8 @@
                 }
               }
             }
-          ]
+          ],
+          'danger'
         );
         setTimeout(() => {
           gameState.platformFrozen = false;
@@ -948,12 +1000,13 @@
                 gameState.cash += bonus;
                 gameState.totalRevenue += bonus;
                 gameState.risk = clamp(gameState.risk + 5, 0, 100);
-                flashBackground('millionaire');
+                flashBackground('commerce-district');
                 addLog(`Whale order paid $${fmt(bonus)}!`, 'good');
               }
             },
             { label: 'Decline (safer)', action: () => addLog('Declined whale order — risk avoided.') }
-          ]
+          ],
+          'good'
         );
       }
     },
@@ -979,7 +1032,8 @@
         showModal(
           'Payment Gateway Outage',
           'Gateway went dark mid-checkout. Customers bounced faster than your reserve ratio.',
-          [{ label: 'Emergency failover', action: () => gameState.owned.altpay && (gameState.backupActive = true) }]
+          [{ label: 'Emergency failover', action: () => gameState.owned.altpay && (gameState.backupActive = true) }],
+          'danger'
         );
       }
     },
@@ -990,7 +1044,8 @@
         showModal(
           'Competitor Collapse',
           'A competitor imploded. Their customers are shopping around like it is Black Friday for chaos.',
-          [{ label: 'Capture market share', action: () => addLog('Demand surged from competitor collapse.', 'good') }]
+          [{ label: 'Capture market share', action: () => addLog('Demand surged from competitor collapse.', 'good') }],
+          'good'
         );
       }
     }
@@ -1077,10 +1132,13 @@
     saveGame();
   }
 
-  function showModal(title, description, choices) {
+  function showModal(title, description, choices, tone = 'normal') {
     const overlay = document.getElementById('modal-overlay');
+    const modal = document.getElementById('modal');
+    modal.className = `overlay-panel modal-panel tone-${tone}`;
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-description').textContent = description;
+    if (tone === 'danger') setScene('payment-failure');
     const choicesEl = document.getElementById('modal-choices');
     choicesEl.innerHTML = '';
     choices.forEach((c) => {
@@ -1295,7 +1353,7 @@
     pendingPromos = [];
     document.getElementById('end-overlay').classList.remove('active');
     document.getElementById('start-overlay').style.display = 'flex';
-    setBackground('war-room');
+    setScene('commerce-district');
   }
 
   function startParticleSystem() {
@@ -1305,7 +1363,7 @@
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
     const particles = [];
-    const colours = ['#00ffff', '#ff00ff', '#ffa500', '#00c896'];
+    const colours = ['#00e5ff', '#00ff99', '#ffb000', 'rgba(120, 90, 200, 0.6)'];
     for (let i = 0; i < 50; i++) {
       particles.push({
         x: Math.random() * width,
@@ -1356,9 +1414,11 @@
   });
 
   window.addEventListener('DOMContentLoaded', () => {
+    preloadBackgrounds();
+    setScene('commerce-district');
     setupStartSelection();
     startParticleSystem();
     registerServiceWorker();
-    if (!loadGame()) setBackground('war-room');
+    if (!loadGame()) setScene('commerce-district');
   });
 })();

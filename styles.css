@@ -1,16 +1,18 @@
 :root {
-  --background-color: #0d0d1a;
-  --surface-color: #13132a;
-  --primary-color: #00ffff;
-  --secondary-color: #ff00ff;
-  --accent-color: #ffa500;
-  --text-color: #e0e0e0;
-  --muted-color: #6c6c84;
-  --danger-color: #ff5555;
-  --success-color: #00c896;
-  --warning-color: #ff9900;
+  --deep-navy: #070b16;
+  --surface-navy: #0d1220;
+  --primary-color: #00e5ff;
+  --success-color: #00ff99;
+  --warning-color: #ffb000;
+  --danger-color: #ff315a;
+  --accent-gold: #ffb000;
+  --text-color: #f4f7fb;
+  --muted-color: #8f9bb3;
+  --border-soft: rgba(0, 229, 255, 0.35);
+  --violet-accent: rgba(120, 90, 200, 0.25);
   --border-radius: 8px;
   --transition-duration: 0.2s;
+  --bg-overlay-opacity: 0.28;
 }
 
 *,
@@ -26,52 +28,88 @@ body {
   min-height: 100%;
   height: 100%;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--background-color);
+  background-color: var(--deep-navy);
   color: var(--text-color);
+  overflow: hidden;
 }
 
-/* Dynamic scene backgrounds */
-#bg-layer {
+/* Layer 0 — full-screen scene image */
+.background-layer {
   position: fixed;
   inset: 0;
-  z-index: -3;
+  z-index: 0;
+  background-color: var(--deep-navy);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: background-image 0.6s ease, opacity 0.6s ease;
-  opacity: 0.45;
+  transition: background-image 0.55s ease;
+  filter: brightness(1.1) contrast(1.08) saturate(1.05);
 }
 
-body[data-bg="war-room"] #bg-layer {
-  background-image: url("war-room.png");
+/* Layer 1 — atmospheric gradient (keeps image visible) */
+.background-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 11, 22, 0.22) 0%,
+    rgba(7, 11, 22, var(--bg-overlay-opacity)) 50%,
+    rgba(7, 11, 22, 0.36) 100%
+  );
+  transition: background 0.4s ease;
 }
 
-body[data-bg="futuristic"] #bg-layer {
-  background-image: url("futuristic.png");
+body.scene-failure .background-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(40, 8, 16, 0.4) 0%,
+    rgba(7, 11, 22, 0.5) 50%,
+    rgba(20, 5, 10, 0.55) 100%
+  );
 }
 
-body[data-bg="system-failure"] #bg-layer {
-  background-image: url("system-failure.png");
-  opacity: 0.55;
+body.scene-victory .background-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(7, 20, 16, 0.35) 0%,
+    rgba(7, 11, 22, 0.4) 50%,
+    rgba(7, 11, 22, 0.48) 100%
+  );
 }
 
-body[data-bg="millionaire"] #bg-layer {
-  background-image: url("millionaire-office.png");
-  opacity: 0.5;
-}
-
+/* Layer 2 — particles (transparent canvas) */
 #particle-canvas {
   position: fixed;
   inset: 0;
-  z-index: -2;
+  z-index: 2;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.35;
+  opacity: 0.28;
 }
 
+/* Dev scene label */
+.scene-debug {
+  position: fixed;
+  bottom: 6px;
+  left: 8px;
+  z-index: 50;
+  font-size: 0.65rem;
+  font-family: monospace;
+  color: rgba(0, 229, 255, 0.7);
+  background: rgba(7, 11, 22, 0.65);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border-soft);
+  pointer-events: none;
+}
+
+/* Layer 3 — app UI */
 #app {
   position: relative;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   min-height: 100%;
@@ -84,9 +122,10 @@ body[data-bg="millionaire"] #bg-layer {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: rgba(19, 19, 42, 0.92);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.25);
-  z-index: 1;
+  background: rgba(7, 11, 22, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-soft);
 }
 
 .header-logo {
@@ -99,6 +138,7 @@ body[data-bg="millionaire"] #bg-layer {
   font-size: 1rem;
   font-weight: bold;
   color: var(--primary-color);
+  letter-spacing: 0.02em;
 }
 
 .header-stats {
@@ -108,7 +148,7 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .header-stats .stat {
-  color: var(--secondary-color);
+  color: var(--muted-color);
 }
 
 .header-stats .cash {
@@ -121,13 +161,14 @@ body[data-bg="millionaire"] #bg-layer {
   justify-content: space-between;
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(7, 11, 22, 0.55);
+  backdrop-filter: blur(4px);
   color: var(--muted-color);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.12);
 }
 
 #market-condition {
-  color: var(--accent-color);
+  color: var(--warning-color);
 }
 
 #main {
@@ -145,13 +186,17 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 #actions {
-  background: rgba(19, 19, 42, 0.85);
-  border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+  background: rgba(13, 18, 32, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 229, 255, 0.12);
 }
 
 #dashboard {
   flex: 1;
-  background: rgba(13, 13, 26, 0.88);
+  background: rgba(7, 11, 22, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 #actions h2,
@@ -171,26 +216,27 @@ body[data-bg="millionaire"] #bg-layer {
 .subsection-title {
   margin-top: 1rem;
   font-size: 0.85rem;
-  color: var(--secondary-color);
+  color: var(--primary-color);
+  opacity: 0.9;
 }
 
 .action-button {
   width: 100%;
   margin: 0.35rem 0;
   padding: 0.65rem 0.75rem;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid var(--primary-color);
+  background: rgba(7, 11, 22, 0.55);
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius);
   color: var(--text-color);
   font-size: 0.9rem;
   cursor: pointer;
   text-align: left;
-  transition: background-color var(--transition-duration), transform var(--transition-duration);
+  transition: background-color var(--transition-duration), border-color var(--transition-duration), transform var(--transition-duration);
 }
 
 .action-button:hover:not(:disabled) {
-  background: var(--primary-color);
-  color: #000;
+  background: rgba(0, 229, 255, 0.12);
+  border-color: var(--primary-color);
   transform: translateY(-1px);
 }
 
@@ -200,12 +246,13 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .action-button.primary-action {
-  border-color: var(--secondary-color);
+  border-color: var(--warning-color);
   font-weight: bold;
 }
 
 .action-button.primary-action:hover:not(:disabled) {
-  background: var(--secondary-color);
+  background: rgba(255, 176, 0, 0.12);
+  border-color: var(--warning-color);
 }
 
 .action-button .action-cost {
@@ -215,16 +262,12 @@ body[data-bg="millionaire"] #bg-layer {
   margin-top: 0.15rem;
 }
 
-.action-button:hover:not(:disabled) .action-cost {
-  color: rgba(0, 0, 0, 0.65);
-}
-
 .risk-block {
   margin-bottom: 0.75rem;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(7, 11, 22, 0.45);
   border-radius: var(--border-radius);
-  border: 1px solid rgba(255, 85, 85, 0.3);
+  border: 1px solid rgba(255, 49, 90, 0.35);
 }
 
 .risk-header {
@@ -237,7 +280,7 @@ body[data-bg="millionaire"] #bg-layer {
 
 .risk-bar-track {
   height: 10px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   border-radius: 5px;
   overflow: hidden;
 }
@@ -271,7 +314,7 @@ body[data-bg="millionaire"] #bg-layer {
   padding: 0.3rem 0.5rem;
   margin-bottom: 0.25rem;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(7, 11, 22, 0.4);
   border-left: 3px solid var(--success-color);
 }
 
@@ -281,7 +324,7 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .rails-list li.power {
-  border-left-color: var(--accent-color);
+  border-left-color: var(--warning-color);
 }
 
 .stats-grid {
@@ -291,8 +334,8 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .stat-card {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 11, 22, 0.4);
+  border: 1px solid rgba(0, 229, 255, 0.12);
   border-radius: var(--border-radius);
   padding: 0.45rem 0.5rem;
   font-size: 0.78rem;
@@ -316,8 +359,8 @@ body[data-bg="millionaire"] #bg-layer {
 .audit-warnings {
   margin-top: 0.5rem;
   padding: 0.5rem;
-  background: rgba(255, 153, 0, 0.12);
-  border: 1px solid var(--warning-color);
+  background: rgba(255, 176, 0, 0.08);
+  border: 1px solid rgba(255, 176, 0, 0.45);
   border-radius: var(--border-radius);
   font-size: 0.78rem;
   color: var(--warning-color);
@@ -338,7 +381,7 @@ body[data-bg="millionaire"] #bg-layer {
 .activity-log li {
   font-size: 0.75rem;
   padding: 0.3rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   color: var(--muted-color);
   line-height: 1.35;
 }
@@ -359,6 +402,7 @@ body[data-bg="millionaire"] #bg-layer {
   color: var(--warning-color);
 }
 
+/* Layer 15+ — overlays (dim scene, don't hide) */
 .overlay {
   position: fixed;
   inset: 0;
@@ -366,7 +410,8 @@ body[data-bg="millionaire"] #bg-layer {
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(7, 11, 22, 0.48);
+  backdrop-filter: blur(3px);
   z-index: 20;
 }
 
@@ -396,19 +441,19 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .overlay-panel {
-  background: var(--surface-color);
-  border: 2px solid var(--primary-color);
+  background: rgba(13, 18, 32, 0.94);
+  border: 2px solid var(--border-soft);
   border-radius: var(--border-radius);
   padding: 1rem;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 0 24px rgba(0, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 229, 255, 0.08);
 }
 
 .start-panel {
-  border-color: var(--secondary-color);
+  border-color: var(--primary-color);
 }
 
 .start-logo {
@@ -423,7 +468,7 @@ body[data-bg="millionaire"] #bg-layer {
 .start-panel h2 {
   margin: 0 0 0.5rem;
   text-align: center;
-  color: var(--secondary-color);
+  color: var(--primary-color);
 }
 
 .start-tagline {
@@ -440,16 +485,17 @@ body[data-bg="millionaire"] #bg-layer {
   margin-bottom: 0.5rem;
   padding: 0.65rem;
   text-align: left;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid var(--primary-color);
+  background: rgba(7, 11, 22, 0.55);
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius);
   color: var(--text-color);
   cursor: pointer;
-  transition: background var(--transition-duration);
+  transition: background var(--transition-duration), border-color var(--transition-duration);
 }
 
 .package-btn:hover {
-  background: rgba(0, 255, 255, 0.15);
+  background: rgba(0, 229, 255, 0.08);
+  border-color: var(--primary-color);
 }
 
 .package-btn strong {
@@ -463,10 +509,42 @@ body[data-bg="millionaire"] #bg-layer {
   color: var(--muted-color);
 }
 
+/* Modal tone variants */
+.modal-panel.tone-normal {
+  border-color: var(--primary-color);
+}
+
+.modal-panel.tone-normal h3 {
+  color: var(--primary-color);
+}
+
+.modal-panel.tone-good {
+  border-color: var(--success-color);
+}
+
+.modal-panel.tone-good h3 {
+  color: var(--success-color);
+}
+
+.modal-panel.tone-warning {
+  border-color: var(--warning-color);
+}
+
+.modal-panel.tone-warning h3 {
+  color: var(--warning-color);
+}
+
+.modal-panel.tone-danger {
+  border-color: var(--danger-color);
+}
+
+.modal-panel.tone-danger h3 {
+  color: var(--danger-color);
+}
+
 #modal h3,
 #promo-modal h3 {
   margin: 0 0 0.5rem;
-  color: var(--secondary-color);
 }
 
 #modal p,
@@ -478,7 +556,12 @@ body[data-bg="millionaire"] #bg-layer {
 }
 
 .promo-panel {
-  border-color: var(--accent-color);
+  border-color: var(--accent-gold);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(255, 176, 0, 0.12);
+}
+
+.promo-panel h3 {
+  color: var(--accent-gold);
 }
 
 .choices {
@@ -489,28 +572,31 @@ body[data-bg="millionaire"] #bg-layer {
 
 .choice-button {
   padding: 0.65rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--secondary-color);
+  background: rgba(7, 11, 22, 0.6);
+  border: 1px solid var(--border-soft);
   border-radius: var(--border-radius);
   color: var(--text-color);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background var(--transition-duration);
+  transition: background var(--transition-duration), border-color var(--transition-duration);
 }
 
 .choice-button:hover {
-  background: var(--secondary-color);
-  color: #000;
+  background: rgba(0, 229, 255, 0.1);
+  border-color: var(--primary-color);
 }
 
 .choice-button.primary,
 .promo-learn {
-  border-color: var(--primary-color);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
 }
 
 .choice-button.primary:hover,
 .promo-learn:hover {
-  background: var(--primary-color);
+  background: rgba(255, 176, 0, 0.12);
+  border-color: var(--accent-gold);
+  color: var(--text-color);
 }
 
 .end-panel h2 {
@@ -518,8 +604,16 @@ body[data-bg="millionaire"] #bg-layer {
   color: var(--primary-color);
 }
 
+.end-panel.win {
+  border-color: var(--success-color);
+}
+
 .end-panel.win h2 {
   color: var(--success-color);
+}
+
+.end-panel.lose {
+  border-color: var(--danger-color);
 }
 
 .end-panel.lose h2 {
@@ -534,7 +628,7 @@ body[data-bg="millionaire"] #bg-layer {
 
 .score-line {
   font-size: 1.1rem;
-  color: var(--accent-color);
+  color: var(--warning-color);
 }
 
 .share-text {
@@ -542,26 +636,12 @@ body[data-bg="millionaire"] #bg-layer {
   color: var(--muted-color);
   font-style: italic;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(7, 11, 22, 0.5);
   border-radius: 4px;
 }
 
 .end-actions {
   margin-top: 1rem;
-}
-
-.powerup-option {
-  text-align: left;
-}
-
-.powerup-option .pu-name {
-  color: var(--primary-color);
-  font-weight: bold;
-}
-
-.powerup-option .pu-cost {
-  font-size: 0.8rem;
-  color: var(--accent-color);
 }
 
 @media (min-width: 640px) {
@@ -573,7 +653,7 @@ body[data-bg="millionaire"] #bg-layer {
     flex: 0 0 42%;
     max-width: 42%;
     border-bottom: none;
-    border-right: 1px solid rgba(0, 255, 255, 0.15);
+    border-right: 1px solid rgba(0, 229, 255, 0.12);
   }
 
   #dashboard {
@@ -598,6 +678,6 @@ body[data-bg="millionaire"] #bg-layer {
 #actions::-webkit-scrollbar-thumb,
 #dashboard::-webkit-scrollbar-thumb,
 .activity-log::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: rgba(0, 229, 255, 0.4);
   border-radius: 3px;
 }
