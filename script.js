@@ -9,7 +9,7 @@
   const MAX_SHUTDOWN_DAYS = 4;
   const SAVE_KEY = 'highriskwars_save_v2';
   const INVENTORY_UNIT_VALUE = 80;
-  const SOVEREIGN_STACK_URL = 'https://sovereignstack.com';
+  const SOVEREIGN_STACK_URL = 'https://sovereignstack.pro';
 
   const PRODUCTS = {
     sovpay: {
