@@ -3,7 +3,7 @@
   "name": "High Risk Wars",
   "description": "An addictive, atmospheric, funny and educational merchant survival game. Learn to survive in high‑risk commerce through trial, error and smart decisions.",
   "start_url": ".",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#0D0D1A",
   "theme_color": "#00FFFF",
   "icons": [
@@ -28,9 +28,16 @@
       "type": "image/png"
     },
     {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon-256.png",
@@ -40,7 +47,8 @@
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

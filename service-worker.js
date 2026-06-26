@@ -9,10 +9,8 @@
  * being offline are redirected to an offline fallback page.
  */
 
-const CACHE_NAME = 'highriskwars-v1';
+const CACHE_NAME = 'highriskwars-v3';
 
-// List of resources to cache during install. These are relative to the
-// service worker’s scope (the root of the PWA).
 const ASSETS = [
   '/',
   '/index.html',
@@ -20,10 +18,16 @@ const ASSETS = [
   '/script.js',
   '/manifest.json',
   '/offline.html',
+  '/highriskwars_logo.png',
+  '/war-room.png',
+  '/futuristic.png',
+  '/system-failure.png',
+  '/millionaire-office.png',
   '/icon-32.png',
   '/icon-64.png',
   '/icon-96.png',
   '/icon-128.png',
+  '/icon-180.png',
   '/icon-192.png',
   '/icon-256.png',
   '/icon-512.png'
