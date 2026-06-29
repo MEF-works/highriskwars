@@ -11,6 +11,20 @@
   const INVENTORY_UNIT_VALUE = 80;
   const SOVEREIGN_STACK_URL = 'https://sovereignstack.pro';
 
+  const LINKS = {
+    sovpay: 'https://sovpay.me',
+    sovsats: 'https://sovpay.me',
+    sovereignStack: SOVEREIGN_STACK_URL,
+    applyProcessing: SOVEREIGN_STACK_URL
+  };
+
+  const PRODUCT_LINKS = [
+    { id: 'apply', label: 'Apply for High-Risk Processing', url: LINKS.applyProcessing, gold: true },
+    { id: 'sovpay', label: 'SovPay — Free Merchant Wallet', url: LINKS.sovpay },
+    { id: 'sovsats', label: 'SovSats — Bitcoin Checkout', url: LINKS.sovsats },
+    { id: 'stack', label: 'AltPay · Rail Setup · Audits · Storefronts', url: LINKS.sovereignStack }
+  ];
+
   const SCENES = {
     'command-center': '/assets/backgrounds/bg-command-center.png',
     'commerce-district': '/assets/backgrounds/bg-commerce-district.png',
@@ -25,7 +39,8 @@
       id: 'sovpay',
       name: 'SovPay',
       cost: 7500,
-      url: 'https://sovpay.me',
+      url: LINKS.sovpay,
+      cta: 'Get your free SovPay wallet →',
       blurb: 'Fallback wallet — keeps revenue flowing when cards fail.',
       promo:
         'SovPay kept your money moving when your processor dropped you. Same idea in real life: a simple fallback payment wallet for merchants who cannot afford to go dark.'
@@ -34,7 +49,8 @@
       id: 'sovsats',
       name: 'SovSats',
       cost: 10000,
-      url: 'https://sovpay.me',
+      url: LINKS.sovsats,
+      cta: 'Explore SovSats checkout →',
       blurb: 'Bitcoin checkout — less chargeback exposure on a slice of sales.',
       promo:
         'SovSats softened the chargeback hit because not every sale depended on cards. Real-world resilient checkout starts with payment options that do not collapse under chargeback pressure.'
@@ -43,7 +59,8 @@
       id: 'altpay',
       name: 'AltPay Nexus',
       cost: 18000,
-      url: SOVEREIGN_STACK_URL,
+      url: LINKS.sovereignStack,
+      cta: 'Learn about AltPay Nexus →',
       blurb: 'Second processor slot — routes sales when primary dies.',
       promo:
         'AltPay Nexus routed payments around the failure. That is the whole point: do not let one processor decide whether your business breathes.'
@@ -52,7 +69,8 @@
       id: 'railSetup',
       name: 'High-Risk Rail Setup',
       cost: 12000,
-      url: SOVEREIGN_STACK_URL,
+      url: LINKS.applyProcessing,
+      cta: 'Apply for high-risk processing →',
       blurb: 'Better approvals, softer reserve holds, fewer surprise rejections.',
       promo:
         'Better rail setup helped you survive review. In real life, high-risk merchants need rails designed around their risk profile, not generic checkout.'
@@ -61,7 +79,8 @@
       id: 'audit',
       name: 'Checkout Resilience Audit',
       cost: 6000,
-      url: SOVEREIGN_STACK_URL,
+      url: LINKS.sovereignStack,
+      cta: 'Book a resilience audit →',
       blurb: 'Forecasts hidden risks for the next few days.',
       promo:
         'The audit gave you time to act before the failure hit. That is what checkout resilience is: finding weak points before they become lost revenue.'
@@ -70,7 +89,8 @@
       id: 'fallbackStorefront',
       name: 'Fallback Storefront',
       cost: 22000,
-      url: SOVEREIGN_STACK_URL,
+      url: LINKS.sovereignStack,
+      cta: 'Deploy a fallback storefront →',
       blurb: 'Backup storefront when main checkout or platform freezes.',
       promo:
         'Your fallback storefront kept the business alive while the main system was frozen. Real operators do not depend on one front door.'
@@ -246,6 +266,93 @@
     activityLog.unshift({ day: gameState.day, msg, tone });
     if (activityLog.length > 40) activityLog.length = 40;
     renderActivityLog();
+  }
+
+  function openExternal(url, label) {
+    console.log('[Link]', label || url, url);
+    window.open(url, '_blank', 'noopener');
+  }
+
+  function renderLinkButton(container, { label, url, gold, owned, className }) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = (className || 'product-link') + (gold ? ' gold' : '') + (owned ? ' owned' : '');
+    btn.textContent = label;
+    btn.addEventListener('click', () => openExternal(url, label));
+    container.appendChild(btn);
+  }
+
+  function renderProductStack() {
+    const container = document.getElementById('product-links');
+    if (!container) return;
+    container.innerHTML = '';
+    PRODUCT_LINKS.forEach((link) => {
+      const owned =
+        (link.id === 'sovpay' && gameState?.owned?.sovpay) ||
+        (link.id === 'sovsats' && gameState?.owned?.sovsats);
+      renderLinkButton(container, { ...link, owned, className: 'product-link' });
+    });
+  }
+
+  function setupStartLinks() {
+    const container = document.getElementById('start-links');
+    if (!container) return;
+    PRODUCT_LINKS.forEach((link) => {
+      renderLinkButton(container, { ...link, className: 'start-link' });
+    });
+  }
+
+  function renderEndCtas(won) {
+    const container = document.getElementById('end-ctas');
+    if (!container) return;
+    container.innerHTML = '';
+    const headline = document.createElement('p');
+    headline.className = 'product-stack-hint';
+    headline.textContent = won
+      ? 'You survived the sim. Build the same resilience for real:'
+      : 'The rails failed you. Fix it before the next shutdown:';
+    container.appendChild(headline);
+
+    const ctas = won
+      ? [
+          { label: 'Apply for High-Risk Processing', url: LINKS.applyProcessing, gold: true },
+          { label: 'Get SovPay Free Wallet', url: LINKS.sovpay },
+          { label: 'SovereignStack — Rails, Audits, Storefronts', url: LINKS.sovereignStack }
+        ]
+      : [
+          { label: 'Apply for Processing — Stop Going Dark', url: LINKS.applyProcessing, gold: true },
+          { label: 'SovPay — Fallback Wallet When Processors Drop You', url: LINKS.sovpay },
+          { label: 'Get a Checkout Resilience Audit', url: LINKS.sovereignStack }
+        ];
+    ctas.forEach((cta) => renderLinkButton(container, { ...cta, className: 'end-cta-link' }));
+  }
+
+  function eventLinksFor(eventId) {
+    const map = {
+      processorShutdown: [
+        { label: 'Apply for high-risk processing', url: LINKS.applyProcessing, gold: true },
+        { label: 'SovPay fallback wallet', url: LINKS.sovpay }
+      ],
+      chargebackStorm: [
+        { label: 'SovSats — reduce card dependency', url: LINKS.sovsats },
+        { label: 'Checkout resilience audit', url: LINKS.sovereignStack }
+      ],
+      bankReview: [
+        { label: 'Apply for high-risk rail setup', url: LINKS.applyProcessing, gold: true }
+      ],
+      reserveHold: [
+        { label: 'High-risk rail setup — softer reserves', url: LINKS.applyProcessing, gold: true }
+      ],
+      platformFreeze: [
+        { label: 'Fallback storefront deployment', url: LINKS.sovereignStack }
+      ],
+      gatewayOutage: [
+        { label: 'AltPay Nexus — backup routing', url: LINKS.sovereignStack },
+        { label: 'SovPay — keep collecting', url: LINKS.sovpay }
+      ],
+      adBan: [{ label: 'Fallback storefront + diversified checkout', url: LINKS.sovereignStack }]
+    };
+    return map[eventId] || [];
   }
 
   function queuePromo(productId) {
@@ -443,6 +550,19 @@
       }
     },
     {
+      id: 'applyProcessing',
+      label: 'Apply for Processing',
+      cost: () => 0,
+      desc: () => 'Submit app · +compliance · opens sovereignstack.pro',
+      run: () => {
+        gameState.compliance = clamp(gameState.compliance + rand(3, 6), 0, 100);
+        gameState.risk = clamp(gameState.risk - rand(1, 3), 0, 100);
+        addLog('Processing application filed. Paperwork logged with compliance.', 'good');
+        openExternal(LINKS.applyProcessing, 'Apply for Processing');
+        return true;
+      }
+    },
+    {
       id: 'powerup',
       label: 'Buy Protection / Power-Up',
       cost: () => 0,
@@ -497,7 +617,7 @@
     }
     showModal(
       'Protection Shop',
-      'Buy resilience before the rails catch fire. Each product helps in specific failure scenarios.',
+      'Buy resilience before the rails catch fire. Each product maps to a real SovereignStack or SovPay offering.',
       available.map((p) => ({
         label: `${p.name} — $${fmt(p.cost)}\n${p.blurb}`,
         action: () => {
@@ -522,7 +642,9 @@
           saveGame();
           renderAll();
         }
-      })).concat([{ label: 'Cancel', action: () => {} }])
+      })).concat([{ label: 'Cancel', action: () => {} }]),
+      'normal',
+      available.map((p) => ({ label: p.cta || `Learn about ${p.name} →`, url: p.url, gold: p.id === 'railSetup' }))
     );
   }
 
@@ -754,7 +876,8 @@
             },
             { label: 'Accept fate', action: () => triggerProcessorShutdown() }
           ],
-          'danger'
+          'danger',
+          eventLinksFor('processorShutdown')
         );
       }
     },
@@ -797,7 +920,8 @@
               }
             }
           ],
-          'danger'
+          'danger',
+          eventLinksFor('chargebackStorm')
         );
       }
     },
@@ -832,7 +956,8 @@
               }
             }
           ],
-          'warning'
+          'warning',
+          eventLinksFor('bankReview')
         );
       }
     },
@@ -848,7 +973,8 @@
           'Reserve Hold',
           `Processor grabbed $${fmt(hold)} in rolling reserves. Your cash flow just got a personality test.`,
           [{ label: 'Grind through it', action: () => addLog('Reserve hold active.', 'warn') }],
-          'warning'
+          'warning',
+          eventLinksFor('reserveHold')
         );
       }
     },
@@ -868,7 +994,8 @@
             },
             { label: 'Wait it out', action: () => addLog('Demand dropped after ad ban.', 'bad') }
           ],
-          'warning'
+          'warning',
+          eventLinksFor('adBan')
         );
       }
     },
@@ -978,7 +1105,8 @@
               }
             }
           ],
-          'danger'
+          'danger',
+          eventLinksFor('platformFreeze')
         );
         setTimeout(() => {
           gameState.platformFrozen = false;
@@ -1033,7 +1161,8 @@
           'Payment Gateway Outage',
           'Gateway went dark mid-checkout. Customers bounced faster than your reserve ratio.',
           [{ label: 'Emergency failover', action: () => gameState.owned.altpay && (gameState.backupActive = true) }],
-          'danger'
+          'danger',
+          eventLinksFor('gatewayOutage')
         );
       }
     },
@@ -1128,17 +1257,23 @@
     document.getElementById('end-score').textContent = fmt(score);
     document.getElementById('share-text').textContent = share;
     overlay.classList.add('active');
+    renderEndCtas(won);
     updateBackgroundMood();
     saveGame();
   }
 
-  function showModal(title, description, choices, tone = 'normal') {
+  function showModal(title, description, choices, tone = 'normal', footerLinks = []) {
     const overlay = document.getElementById('modal-overlay');
     const modal = document.getElementById('modal');
     modal.className = `overlay-panel modal-panel tone-${tone}`;
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-description').textContent = description;
     if (tone === 'danger') setScene('payment-failure');
+    const linksEl = document.getElementById('modal-footer-links');
+    if (linksEl) {
+      linksEl.innerHTML = '';
+      footerLinks.forEach((link) => renderLinkButton(linksEl, { ...link, className: 'modal-link' }));
+    }
     const choicesEl = document.getElementById('modal-choices');
     choicesEl.innerHTML = '';
     choices.forEach((c) => {
@@ -1167,6 +1302,7 @@
     const overlay = document.getElementById('promo-overlay');
     document.getElementById('promo-title').textContent = product.name;
     document.getElementById('promo-description').textContent = product.promo;
+    document.getElementById('promo-learn').textContent = product.cta || 'Learn More';
     document.getElementById('promo-learn').onclick = () => {
       window.open(product.url, '_blank', 'noopener');
       overlay.classList.remove('active');
@@ -1289,6 +1425,7 @@
     renderActionButtons();
     renderStats();
     renderActivityLog();
+    renderProductStack();
   }
 
   function setupStartSelection() {
@@ -1339,6 +1476,7 @@
         document.getElementById('end-score').textContent = fmt(score);
         document.getElementById('share-text').textContent = share;
         overlay.classList.add('active');
+        renderEndCtas(gameState.won);
       }
       return true;
     } catch (e) {
@@ -1416,6 +1554,7 @@
   window.addEventListener('DOMContentLoaded', () => {
     preloadBackgrounds();
     setScene('commerce-district');
+    setupStartLinks();
     setupStartSelection();
     startParticleSystem();
     registerServiceWorker();
