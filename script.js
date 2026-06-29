@@ -15,7 +15,7 @@
     sovpay: 'https://sovpay.me',
     sovsats: 'https://sovpay.me',
     sovereignStack: SOVEREIGN_STACK_URL,
-    applyProcessing: SOVEREIGN_STACK_URL
+    applyProcessing: 'https://apply.mefdup.com'
   };
 
   const PRODUCT_LINKS = [
@@ -553,7 +553,7 @@
       id: 'applyProcessing',
       label: 'Apply for Processing',
       cost: () => 0,
-      desc: () => 'Submit app · +compliance · opens sovereignstack.pro',
+      desc: () => 'Submit app · +compliance · opens apply.mefdup.com',
       run: () => {
         gameState.compliance = clamp(gameState.compliance + rand(3, 6), 0, 100);
         gameState.risk = clamp(gameState.risk - rand(1, 3), 0, 100);
