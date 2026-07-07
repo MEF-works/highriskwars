@@ -10,12 +10,17 @@
   const SAVE_KEY = 'highriskwars_save_v2';
   const INVENTORY_UNIT_VALUE = 80;
   const SOVEREIGN_STACK_URL = 'https://sovereignstack.pro';
+  const MERCHANT_FIRST_URL = 'https://merchantfirst.pro';
+  const MERCHANT_FIRST_MIDGAME_URL = `${MERCHANT_FIRST_URL}?utm_source=highriskwars&utm_medium=game&utm_campaign=midgame_popup`;
+  const MERCHANT_FIRST_GAMEOVER_URL = `${MERCHANT_FIRST_URL}?utm_source=highriskwars&utm_medium=game&utm_campaign=gameover`;
 
   const LINKS = {
     sovpay: 'https://sovpay.me',
-    sovsats: 'https://sovpay.me',
+    sovsats: 'https://sovsats.com',
     sovereignStack: SOVEREIGN_STACK_URL,
-    applyProcessing: 'https://apply.mefdup.com'
+    applyProcessing: 'https://apply.mefdup.com',
+    merchantFirstMidgame: MERCHANT_FIRST_MIDGAME_URL,
+    merchantFirstGameover: MERCHANT_FIRST_GAMEOVER_URL
   };
 
   const FOOTER_LINKS = [
@@ -71,12 +76,12 @@
       id: 'railSetup',
       name: 'Processing Application',
       cost: 12000,
-      url: LINKS.applyProcessing,
+      url: LINKS.merchantFirstMidgame,
       cta: 'Apply for real processing →',
       blurb: 'File high-risk processing paperwork before reviews hit.',
       gameEffect: 'In-game: +compliance · −risk · softer reserve holds & reviews',
       promo:
-        'Better rail setup helped you survive review. In real life, file at apply.mefdup.com — rails built for your risk profile, not generic checkout.'
+        'Better rail setup helped you survive review. In real life, file at merchantfirst.pro — rails built for your risk profile, not generic checkout.'
     },
     audit: {
       id: 'audit',
@@ -334,7 +339,7 @@
     const row = document.createElement('div');
     row.className = 'end-cta-row';
     [
-      { label: 'apply.mefdup.com', url: LINKS.applyProcessing },
+      { label: 'merchantfirst.pro', url: LINKS.merchantFirstGameover },
       { label: 'sovpay.me', url: LINKS.sovpay }
     ].forEach((link) => {
       const btn = document.createElement('button');
@@ -1210,7 +1215,7 @@
     gameState.endReason = reason;
     const score = calculateScore();
     const rails = activeRailCount();
-    const share = `I survived ${gameState.day} days in High Risk Wars with $${fmt(netWorth())} net worth, ${rails} rails active, and ${gameState.shutdownsSurvived} shutdowns survived. Score: ${score}`;
+    const share = `I survived ${gameState.day} days in High Risk Wars with $${fmt(netWorth())} net worth, ${rails} rails active, and ${gameState.shutdownsSurvived} shutdowns survived. Score: ${score}. Play at highriskwars.com`;
 
     const overlay = document.getElementById('end-overlay');
     const panel = document.getElementById('end-modal');
@@ -1424,7 +1429,7 @@
       if (gameState.gameOver) {
         const score = calculateScore();
         const rails = activeRailCount();
-        const share = `I survived ${gameState.day} days in High Risk Wars with $${fmt(netWorth())} net worth, ${rails} rails active, and ${gameState.shutdownsSurvived} shutdowns survived. Score: ${score}`;
+        const share = `I survived ${gameState.day} days in High Risk Wars with $${fmt(netWorth())} net worth, ${rails} rails active, and ${gameState.shutdownsSurvived} shutdowns survived. Score: ${score}. Play at highriskwars.com`;
         const overlay = document.getElementById('end-overlay');
         const panel = document.getElementById('end-modal');
         panel.classList.toggle('win', gameState.won);
